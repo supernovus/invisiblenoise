@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use v5.12;
+use File::Basename;
+use File::Find::Rule;
+use InvisibleNoise;
+
+sub usage {
+  my $app = basename $0;
+	if ($1) {
+		say $1;
+	}
+  print <<"EOF";
+  usage: $app --page <config> <page-file>
+  or:    $app --dir  <config> <directory> [extension]
+EOF
+  exit 1;
+}
+
+if (@ARGV < 3) {
+	usage();
+}
+
+my ($command, $config, $build, $ext) = @ARGV;
+
+if (!$ext) { $ext = '.xml'; }
+
+if (! -f $config) {
+	usage("no such config file '$config' found.");
+}
+
+my $inoise = InvisibleNoise->new(conffile => $config);
+
+given ($command) {
+	when ('--page') {
+		$inoise->build_page($build);
+	}
+	when ('--dir') {
+		my @pages = File::Find::Rule->file->name('*'.$ext)->in($build);
+		for my $page (@pages) {
+			$inoise->build_page($page);
+		}
+	}
+	default {
+		usage("unknown command '$command' specified.");
+	}
+}
+
