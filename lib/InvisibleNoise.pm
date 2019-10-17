@@ -15,6 +15,7 @@ use File::Basename;
 use UNIVERSAL::require;
 use Perl6::Slurp;
 use Webtoo::Template::TT;
+use Encode;
 
 has conffile => (is => 'ro',   required => 1);           ## The config file.
 has conf     => (is => 'lazy');                          ## A hash of options.
@@ -24,7 +25,7 @@ has renderer => (is => 'lazy', handles  => ['render']);  ## A rendering engine.
 ## Build the default configuration.
 sub _build_conf {
   my ($self) = @_;
-  decode_json(slurp($self->conffile));
+  decode_json(encode("utf8", slurp($self->conffile)));
 }
 
 ## Build the default renderer.
@@ -39,7 +40,7 @@ sub _build_renderer {
 sub load_config {
   my ($self, $file) = @_;
   $self->{conffile} = $file;
-  $self->{conf} = decode_json(slurp($file));
+  $self->{conf} = decode_json(encode("utf8", slurp($file)));
 }
 
 ## Spit out a file.
@@ -109,7 +110,7 @@ sub get_page {
       $page->{data} = $metadata;
     }
     elsif ($ftype eq '.json') {
-      $page->{data} = decode_json(slurp($file));
+      $page->{data} = decode_json(encode("utf8", slurp($file)));
     }
     else {
       die "Sorry, unsupport page type: '$ftype'.";
